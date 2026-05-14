@@ -332,9 +332,18 @@
 <div class="toast" id="toast">+1 Новая жертва! 🐒</div>
 
 <script>
-  // Global counter via counterapi.dev — works across all devices
-  const NAMESPACE = 'wifi-prank-monkey';
-  const COUNTER_KEY = 'visitors';
+  // Persistent counter using localStorage
+  const KEY = 'wifi_prank_visitors_v1';
+
+  function getCount() {
+    try {
+      return parseInt(localStorage.getItem(KEY) || '0', 10);
+    } catch(e) { return 0; }
+  }
+
+  function setCount(n) {
+    try { localStorage.setItem(KEY, n); } catch(e) {}
+  }
 
   function animateNumber(el, from, to, duration) {
     const start = performance.now();
@@ -360,36 +369,24 @@
     setTimeout(() => el.classList.remove('bump'), 350);
   }
 
-  // On load: hit the global counter API
-  window.addEventListener('DOMContentLoaded', async () => {
+  // On load: increment counter
+  window.addEventListener('DOMContentLoaded', () => {
+    const prev = getCount();
+    const next = prev + 1;
+    setCount(next);
+
     const el = document.getElementById('visitCount');
-    el.textContent = '...';
 
-    try {
-      // counterapi.dev — free, no signup, auto-creates on first hit
-      const res = await fetch(
-        `https://counterapi.dev/api/${NAMESPACE}/${COUNTER_KEY}/hit`,
-        { method: 'GET' }
-      );
-      const data = await res.json();
-      const count = data.count || data.value || 1;
+    // Animate from 0 to new count
+    setTimeout(() => {
+      animateNumber(el, 0, next, 1200);
+    }, 600);
 
-      setTimeout(() => {
-        animateNumber(el, 0, count, 1200);
-      }, 200);
-
-      setTimeout(() => {
-        bumpNumber(el);
-        showToast('+ ты! Ещё один попался 🐒');
-      }, 1600);
-
-    } catch (err) {
-      // Fallback to localStorage if API is unavailable
-      const local = parseInt(localStorage.getItem('wifi_prank_fallback') || '0') + 1;
-      localStorage.setItem('wifi_prank_fallback', local);
-      animateNumber(el, 0, local, 1200);
-      setTimeout(() => showToast('+ ты! Ещё один попался 🐒'), 1600);
-    }
+    // Show toast after animation
+    setTimeout(() => {
+      bumpNumber(el);
+      showToast('+ ты! Ещё один попался 🐒');
+    }, 1900);
   });
 </script>
 </body>
